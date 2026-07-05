@@ -28,3 +28,4 @@ infra/build/
 *.iml
 .vscode/
 .DS_Store
+.claude/
