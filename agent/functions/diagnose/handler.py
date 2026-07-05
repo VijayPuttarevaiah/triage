@@ -24,8 +24,8 @@ Respond with ONLY a single JSON object, no markdown fences, no prose, matching e
 
 Guidance on actions:
 - restart_service: use when logs show error-storm/500s or a crash-loop pattern with the app otherwise reachable.
-- scale_out: use when latency (p99) is elevated but error rate is low - suggests capacity pressure.
-- disable_feature_flag: use only when restart_service has already been tried for this alarm and the problem recurred (a rollback-class action) - treat as high-risk.
+- scale_out: use when the alarm or metrics indicate elevated p99 latency (a "latency injection" or slow-response log line, or a rising target_response_time_p99 series) with error rate otherwise low - this is a capacity/latency problem, and the fix is more capacity, not a rollback. A log line merely mentioning a toggle or flag being "enabled" is NOT by itself evidence for disable_feature_flag - check whether the underlying symptom is latency (-> scale_out) or errors (-> restart_service) first.
+- disable_feature_flag: reserve this ONLY for cases where the SAME alarm has already been restarted or scaled once before in this incident history and the problem recurred anyway (a rollback-class action of last resort) - treat as high-risk. Do not choose this as a first response to either an error storm or a latency spike.
 - none: use when evidence is inconclusive or does not indicate an actionable pattern.
 
 You may only ever name an action - you cannot invoke it yourself."""
