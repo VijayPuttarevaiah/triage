@@ -1,0 +1,30 @@
+# Java / Maven
+payflow/target/
+*.class
+*.jar
+!payflow/.mvn/wrapper/*.jar
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+agent/dist/
+*.zip
+
+# Terraform
+infra/.terraform/
+infra/.terraform.lock.hcl
+infra/tfplan*
+infra/build/
+# NOTE: terraform.tfstate is deliberately NOT ignored for this project -
+# private repo + committed local state = simple recovery. Production would
+# use an S3 backend with DynamoDB locking (say this in the report).
+
+# IDE / OS
+.idea/
+*.iml
+.vscode/
+.DS_Store

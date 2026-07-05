@@ -1,0 +1,312 @@
+{
+  "info": {
+    "name": "PayFlow",
+    "description": "Full endpoint coverage for the PayFlow workload plane (Triage project): health check, transaction CRUD with idempotency, and the three chaos scenarios. Run folders top to bottom - the Chaos folders leave state behind (error storm / latency) until reset, and Crash kills the process.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "b6f2a6d0-3d8e-4b1a-9f2a-payflow-collection"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080", "type": "string" },
+    { "key": "txn_id", "value": "", "type": "string" }
+  ],
+  "item": [
+    {
+      "name": "1. Health",
+      "item": [
+        {
+          "name": "GET /health -> 200 UP",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('body reports UP', () => pm.expect(pm.response.json().status).to.eql('UP'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Transactions (happy path)",
+      "item": [
+        {
+          "name": "POST /transactions -> 201 Created",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/transactions",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 42.50\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 201', () => pm.response.to.have.status(201));",
+                  "const json = pm.response.json();",
+                  "pm.test('status field is COMPLETED', () => pm.expect(json.status).to.eql('COMPLETED'));",
+                  "pm.test('txn_id present', () => pm.expect(json.txn_id).to.be.a('string').and.not.empty);",
+                  "pm.collectionVariables.set('txn_id', json.txn_id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /transactions/{id} -> 200, matches created txn",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/transactions/{{txn_id}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('txn_id matches', () => pm.expect(json.txn_id).to.eql(pm.collectionVariables.get('txn_id')));",
+                  "pm.test('amount is 42.50', () => pm.expect(json.amount).to.eql('42.50'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /transactions/{unknown-id} -> 404",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/transactions/does-not-exist-00000"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /transactions (replay same txn_id) -> 200 ALREADY_RECORDED",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/transactions",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"txn_id\": \"{{txn_id}}\",\n  \"amount\": 999.99\n}"
+            },
+            "description": "Idempotency check: replaying the same client-supplied txn_id must not double-record or overwrite the amount - the conditional write should reject it and the controller returns the existing record's id with ALREADY_RECORDED."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 200 (not 201 - no new record made)', () => pm.response.to.have.status(200));",
+                  "const json = pm.response.json();",
+                  "pm.test('status field is ALREADY_RECORDED', () => pm.expect(json.status).to.eql('ALREADY_RECORDED'));",
+                  "pm.test('txn_id unchanged', () => pm.expect(json.txn_id).to.eql(pm.collectionVariables.get('txn_id')));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Chaos - Scenario 1: Error Storm",
+      "item": [
+        {
+          "name": "POST /chaos/errors -> enable",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/chaos/errors"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('flag enabled', () => pm.expect(pm.response.json().chaos).to.eql('error_storm_enabled'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /transactions during storm -> 500",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/transactions",
+            "body": { "mode": "raw", "raw": "{}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 500', () => pm.response.to.have.status(500));",
+                  "pm.test('error body shape', () => pm.expect(pm.response.json().error).to.eql('internal_error'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /health during storm -> still 200 (exempt)",
+          "request": {
+            "method": "GET",
+            "url": "{{base_url}}/health"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('health stays UP during error storm', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /chaos/reset -> clear",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/chaos/reset"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('reset confirmed', () => pm.expect(pm.response.json().chaos).to.eql('reset'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /transactions after reset -> 201 (confirm cleared)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/transactions",
+            "body": { "mode": "raw", "raw": "{\"amount\": 5.00}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('back to normal: 201', () => pm.response.to.have.status(201));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Chaos - Scenario 2: Latency Injection",
+      "item": [
+        {
+          "name": "POST /chaos/latency -> enable",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/chaos/latency"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));",
+                  "pm.test('flag enabled', () => pm.expect(pm.response.json().chaos).to.eql('latency_injection_enabled'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /transactions with latency -> 201, ~3s+",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{base_url}}/transactions",
+            "body": { "mode": "raw", "raw": "{}" }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 201 (latency does not error, just delays)', () => pm.response.to.have.status(201));",
+                  "pm.test('response took at least ~2.8s', () => pm.expect(pm.response.responseTime).to.be.above(2800));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /chaos/reset -> clear",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/chaos/reset"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Chaos - Scenario 3: Crash (DESTRUCTIVE - run manually, last)",
+      "item": [
+        {
+          "name": "POST /chaos/crash -> 202, process exits ~2s later",
+          "request": {
+            "method": "POST",
+            "url": "{{base_url}}/chaos/crash"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('status is 202 (accepted, exit is async)', () => pm.response.to.have.status(202));",
+                  "pm.test('confirms scheduled', () => pm.expect(pm.response.json().chaos).to.eql('crash_scheduled'));"
+                ]
+              }
+            }
+          ],
+          "description": "WARNING: this kills the JVM process ~2s after responding. Only run this deliberately, and only as the last request in a run - every request after this will fail with connection refused until you restart the app/container."
+        }
+      ]
+    }
+  ]
+}
