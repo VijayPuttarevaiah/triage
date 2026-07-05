@@ -72,8 +72,8 @@
       "Resource": "arn:aws:states:::sns:publish",
       "Parameters": {
         "TopicArn": "${sns_topic_arn}",
-        "Subject": "Triage: incident not actionable",
-        "Message.$": "States.Format('Incident {} on alarm {}: policy rejected action {} ({}).', $.intake.incident_id, $.intake.alarm_name, $.policy_decision.action, $.policy_decision.reason)"
+        "Subject": "Triage: no action needed",
+        "Message.$": "States.Format('Triage looked into an alert (alarm: {}) but decided not to take any automated action. Reason: {}. No response needed - this is just for your records. Incident ID: {}.', $.intake.alarm_name, $.policy_decision.reason, $.intake.incident_id)"
       },
       "Next": "RejectedEnd"
     },
@@ -81,11 +81,17 @@
 
     "RequestApproval": {
       "Type": "Task",
-      "Resource": "arn:aws:states:::sns:publish.waitForTaskToken",
+      "Resource": "arn:aws:states:::lambda:invoke.waitForTaskToken",
       "Parameters": {
-        "TopicArn": "${sns_topic_arn}",
-        "Subject": "Triage: approval needed",
-        "Message.$": "States.Format('Incident {} on alarm {} recommends action {}. Approve: ${approval_api_url}?task_token={}&decision=approve  |  Reject: ${approval_api_url}?task_token={}&decision=reject  (link expires in 1 hour)', $.intake.incident_id, $.intake.alarm_name, $.policy_decision.action, $$.Task.Token, $$.Task.Token)"
+        "FunctionName": "${notify_approval_arn}",
+        "Payload": {
+          "incident_id.$": "$.intake.incident_id",
+          "alarm_name.$": "$.intake.alarm_name",
+          "action.$": "$.policy_decision.action",
+          "probable_cause.$": "$.diagnosis.probable_cause",
+          "reasoning.$": "$.diagnosis.reasoning",
+          "task_token.$": "$$.Task.Token"
+        }
       },
       "TimeoutSeconds": 3600,
       "ResultPath": "$.approval_result",
@@ -173,8 +179,8 @@
       "Resource": "arn:aws:states:::sns:publish",
       "Parameters": {
         "TopicArn": "${sns_topic_arn}",
-        "Subject": "Triage: incident ESCALATED - needs a human",
-        "Message.$": "States.Format('Incident {} on alarm {} was escalated: remediation did not verify healthy, or approval was rejected/timed out. Please investigate manually.', $.intake.incident_id, $.intake.alarm_name)"
+        "Subject": "Triage: needs a person to take a look",
+        "Message.$": "States.Format('Triage tried to fix an incident on alarm {} automatically but could not confirm it is resolved (or the approval request was rejected or timed out). Please check the PayFlow dashboard and investigate manually. Incident ID: {}.', $.intake.alarm_name, $.intake.incident_id)"
       },
       "Next": "EscalatedEnd"
     },

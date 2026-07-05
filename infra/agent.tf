@@ -436,6 +436,65 @@ resource "aws_cloudwatch_log_group" "postmortem" {
   retention_in_days = 3
 }
 
+# ── notify_approval (composes the human-readable approval email) ────────
+# Invoked by the state machine via lambda:invoke.waitForTaskToken instead of
+# sns:publish.waitForTaskToken - building the message in Python avoids the
+# fragile escaping rules of ASL's States.Format intrinsic (no support for
+# backslash escapes), so the email can use real line breaks and plain-English
+# action descriptions instead of a single unreadable run-on paragraph.
+
+data "archive_file" "notify_approval" {
+  type        = "zip"
+  source_file = "${local.agent_functions_dir}/notify_approval/handler.py"
+  output_path = "${path.module}/build/notify_approval.zip"
+}
+
+resource "aws_iam_role" "notify_approval" {
+  name               = "${var.project}-fn-notify-approval"
+  assume_role_policy = data.aws_iam_policy_document.agent_lambda_assume.json
+}
+
+resource "aws_iam_role_policy_attachment" "notify_approval_logs" {
+  role       = aws_iam_role.notify_approval.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+resource "aws_iam_role_policy" "notify_approval_sns" {
+  name = "${var.project}-fn-notify-approval-sns"
+  role = aws_iam_role.notify_approval.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["sns:Publish"]
+      Resource = aws_sns_topic.incidents.arn
+    }]
+  })
+}
+
+resource "aws_lambda_function" "notify_approval" {
+  function_name    = "${var.project}-notify-approval"
+  role             = aws_iam_role.notify_approval.arn
+  handler          = "handler.handler"
+  runtime          = "python3.12"
+  timeout          = 15
+  memory_size      = 128
+  filename         = data.archive_file.notify_approval.output_path
+  source_code_hash = data.archive_file.notify_approval.output_base64sha256
+  environment {
+    variables = {
+      SNS_TOPIC_ARN     = aws_sns_topic.incidents.arn
+      APPROVAL_API_URL  = "${aws_apigatewayv2_api.approval.api_endpoint}/approve"
+    }
+  }
+  tags = { Project = var.project }
+}
+
+resource "aws_cloudwatch_log_group" "notify_approval" {
+  name              = "/aws/lambda/${aws_lambda_function.notify_approval.function_name}"
+  retention_in_days = 3
+}
+
 # ── approval (API Gateway callback -> SendTaskSuccess/Failure) ───────────
 
 data "archive_file" "approval" {
@@ -550,6 +609,7 @@ resource "aws_iam_role_policy" "state_machine_permissions" {
           aws_lambda_function.remediate.arn,
           aws_lambda_function.verify.arn,
           aws_lambda_function.postmortem.arn,
+          aws_lambda_function.notify_approval.arn,
         ]
       },
       {
@@ -583,6 +643,7 @@ resource "aws_sfn_state_machine" "triage" {
     remediate_arn     = aws_lambda_function.remediate.arn
     verify_arn        = aws_lambda_function.verify.arn
     postmortem_arn    = aws_lambda_function.postmortem.arn
+    notify_approval_arn = aws_lambda_function.notify_approval.arn
     sns_topic_arn     = aws_sns_topic.incidents.arn
     approval_api_url  = "${aws_apigatewayv2_api.approval.api_endpoint}/approve"
     dlq_url           = aws_sqs_queue.dlq.url
