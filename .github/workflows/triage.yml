@@ -1,0 +1,62 @@
+name: triage
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "agent/**"
+      - "infra/**"
+      - ".github/workflows/triage.yml"
+
+permissions:
+  id-token: write # required for OIDC federation - no long-lived AWS keys
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  lint-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dev dependencies
+        run: pip install ruff pytest boto3 moto
+      - name: Lint
+        run: ruff check agent/
+      - name: Test
+        run: pytest agent/tests -q
+
+  terraform-apply:
+    needs: lint-test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.5"
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform init
+        working-directory: infra
+        run: terraform init
+
+      - name: Terraform plan
+        working-directory: infra
+        run: terraform plan -out=tfplan
+
+      # Production alternative (documented in report): require a manual
+      # approval gate on the plan output before apply, rather than
+      # auto-approving on every push to main.
+      - name: Terraform apply
+        working-directory: infra
+        run: terraform apply -auto-approve tfplan
