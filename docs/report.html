@@ -1,0 +1,758 @@
+<title>Triage — CSCI 5411 Term Project Report</title>
+<style>
+  :root {
+    --paper: #F6F7FA;
+    --ink: #161A22;
+    --ink-soft: #4B5262;
+    --indigo: #33459E;
+    --indigo-soft: #E7EAF7;
+    --green: #1F8A5C;
+    --green-soft: #E4F3EC;
+    --amber: #966017;
+    --amber-soft: #FBF0DE;
+    --red: #B23B3B;
+    --red-soft: #FBEAEA;
+    --line: rgba(22,26,34,0.13);
+    --line-strong: rgba(22,26,34,0.28);
+    --code-bg: #EEF0F5;
+    --shadow: 0 1px 2px rgba(22,26,34,0.06);
+  }
+  :root[data-theme="dark"] {
+    --paper: #10131A;
+    --ink: #E7E9EE;
+    --ink-soft: #A6ADBC;
+    --indigo: #8CA0FF;
+    --indigo-soft: #1B2140;
+    --green: #4CC391;
+    --green-soft: #12291F;
+    --amber: #E0972F;
+    --amber-soft: #2E2210;
+    --red: #E17A7A;
+    --red-soft: #2E1717;
+    --line: rgba(231,233,238,0.16);
+    --line-strong: rgba(231,233,238,0.32);
+    --code-bg: #181C26;
+    --shadow: none;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #10131A;
+      --ink: #E7E9EE;
+      --ink-soft: #A6ADBC;
+      --indigo: #8CA0FF;
+      --indigo-soft: #1B2140;
+      --green: #4CC391;
+      --green-soft: #12291F;
+      --amber: #E0972F;
+      --amber-soft: #2E2210;
+      --red: #E17A7A;
+      --red-soft: #2E1717;
+      --line: rgba(231,233,238,0.16);
+      --line-strong: rgba(231,233,238,0.32);
+      --code-bg: #181C26;
+      --shadow: none;
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+  }
+  body {
+    font-family: -apple-system, "Segoe UI", system-ui, "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 6rem;
+  }
+  h1, h2, h3, h4 {
+    font-family: Charter, Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+    font-weight: 600;
+    text-wrap: balance;
+    color: var(--ink);
+  }
+  .cover h1 {
+    font-size: 2.6rem;
+    line-height: 1.12;
+    margin: 0.4em 0 0.2em;
+    letter-spacing: -0.01em;
+  }
+  .cover .kicker {
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    font-size: 0.78rem;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--indigo);
+    font-weight: 600;
+  }
+  .cover .subtitle {
+    font-size: 1.15rem;
+    color: var(--ink-soft);
+    max-width: 46em;
+    margin-top: 0.3em;
+  }
+  .cover-meta {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 0.9rem 2rem;
+    font-size: 0.92rem;
+  }
+  .cover-meta dt { color: var(--ink-soft); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; }
+  .cover-meta dd { margin: 0.15em 0 0; font-weight: 500; font-variant-numeric: tabular-nums; }
+
+  section { margin-top: 3.2rem; }
+  h2 {
+    font-size: 1.55rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.55em;
+    padding-bottom: 0.5em;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 1.1em;
+  }
+  h2 .num {
+    color: var(--indigo);
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.03em;
+  }
+  h3 { font-size: 1.18rem; margin: 1.6em 0 0.5em; }
+  h4 { font-size: 1rem; margin: 1.3em 0 0.4em; font-family: inherit; font-weight: 700; }
+  p { margin: 0.75em 0; max-width: 68ch; }
+  section > p:first-of-type { margin-top: 0; }
+  ul, ol { max-width: 68ch; padding-left: 1.3em; }
+  li { margin: 0.35em 0; }
+  strong { font-weight: 650; }
+  a { color: var(--indigo); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+  code, .mono {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+    font-size: 0.86em;
+  }
+  code {
+    background: var(--code-bg);
+    padding: 0.1em 0.4em;
+    border-radius: 4px;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0.9em 1.1em;
+    overflow-x: auto;
+    font-size: 0.82rem;
+    line-height: 1.55;
+  }
+  pre code { background: none; padding: 0; }
+
+  .figure-wrap { overflow-x: auto; margin: 1.3em 0; }
+  figure { margin: 0; }
+  figure svg { display: block; }
+  figcaption {
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    margin-top: 0.6em;
+    max-width: 68ch;
+  }
+  figcaption strong { color: var(--ink); }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 0.88rem;
+    margin: 1em 0;
+  }
+  .table-wrap { overflow-x: auto; }
+  th, td {
+    text-align: left;
+    padding: 0.55em 0.8em;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+  }
+  th {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ink-soft);
+    font-weight: 700;
+    border-bottom: 1px solid var(--line-strong);
+  }
+  td.num, th.num { font-variant-numeric: tabular-nums; text-align: right; }
+
+  .pill {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    padding: 0.15em 0.6em;
+    border-radius: 99px;
+    white-space: nowrap;
+  }
+  .pill-resolved { background: var(--green-soft); color: var(--green); }
+  .pill-escalated { background: var(--amber-soft); color: var(--amber); }
+  .pill-rejected { background: var(--code-bg); color: var(--ink-soft); }
+  .pill-failed { background: var(--red-soft); color: var(--red); }
+  .pill-auto { background: var(--indigo-soft); color: var(--indigo); }
+  .pill-approval { background: var(--amber-soft); color: var(--amber); }
+
+  .callout {
+    border-left: 3px solid var(--indigo);
+    background: var(--indigo-soft);
+    padding: 0.9em 1.1em;
+    border-radius: 0 8px 8px 0;
+    margin: 1.2em 0;
+    font-size: 0.94rem;
+  }
+  .callout.risk { border-color: var(--amber); background: var(--amber-soft); }
+  .callout strong.label {
+    display: block;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.3em;
+    color: var(--ink-soft);
+  }
+
+  .decision {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1.1em 1.3em;
+    margin: 1.1em 0;
+    background: color-mix(in srgb, var(--paper) 96%, var(--ink) 4%);
+  }
+  .decision .name { font-weight: 700; font-size: 0.98rem; }
+  .decision dl { display: grid; grid-template-columns: max-content 1fr; gap: 0.25em 0.9em; margin: 0.6em 0 0; font-size: 0.9rem; }
+  .decision dt { color: var(--ink-soft); font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.05em; padding-top: 0.15em; }
+  .decision dd { margin: 0; }
+
+  .pillar {
+    border-top: 3px solid var(--indigo);
+    padding-top: 1em;
+    margin-top: 2.2em;
+  }
+  .pillar h3 { margin-top: 0; }
+
+  .toc { columns: 1; font-size: 0.92rem; }
+  .toc ol { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 0.5em 0; display: flex; gap: 0.6em; }
+  .toc .toc-num { color: var(--indigo); font-weight: 700; min-width: 1.4em; }
+  .toc a { color: var(--ink); text-decoration: none; }
+  .toc a:hover { color: var(--indigo); }
+
+  hr.rule { border: none; border-top: 1px solid var(--line); margin: 2.5rem 0; }
+
+  @media print {
+    body { font-size: 11.5pt; }
+    .page { max-width: none; padding: 0; }
+    section { margin-top: 1.6em; page-break-inside: avoid; }
+    h2 { page-break-after: avoid; }
+    .figure-wrap, table, .decision { page-break-inside: avoid; }
+    a { color: var(--ink); }
+    @page { margin: 2cm 1.8cm; }
+  }
+</style>
+
+<div class="page">
+
+<div class="cover">
+  <div class="kicker">CSCI 5411 — Advanced Cloud Architecting — Summer 2026</div>
+  <h1>Triage: Autonomous Incident Response &amp; Self-Healing Infrastructure</h1>
+  <p class="subtitle">A Python control plane that detects, diagnoses, governs, and remediates production incidents on a Java fintech workload — with a deterministic policy engine outside the LLM's reasoning loop, and a human-approval path for anything higher-risk than a restart.</p>
+  <dl class="cover-meta">
+    <div><dt>Author</dt><dd>Vijay Puttarevaiah</dd></div>
+    <div><dt>Report date</dt><dd>July 5, 2026</dd></div>
+    <div><dt>Repository</dt><dd><code>github.com/VijayPuttarevaiah/triage</code> (private)</dd></div>
+    <div><dt>Region</dt><dd>us-east-1, single account</dd></div>
+  </dl>
+</div>
+
+<hr class="rule" />
+
+<nav class="toc">
+  <ol>
+    <li><span class="toc-num">1</span><a href="#overview">Overview &amp; Motivation</a></li>
+    <li><span class="toc-num">2</span><a href="#functional">Functional Requirements</a></li>
+    <li><span class="toc-num">3</span><a href="#nfr">Non-Functional Requirements</a></li>
+    <li><span class="toc-num">4</span><a href="#architecture">Architecture Design &amp; Diagrams</a></li>
+    <li><span class="toc-num">5</span><a href="#techstack">Tech Stack Selection &amp; Justification</a></li>
+    <li><span class="toc-num">6</span><a href="#implementation">Implementation</a></li>
+    <li><span class="toc-num">7</span><a href="#wa">AWS Well-Architected Framework</a></li>
+    <li><span class="toc-num">8</span><a href="#limitations">Limitations &amp; Production Roadmap</a></li>
+  </ol>
+</nav>
+
+<section id="overview">
+<h2><span class="num">01</span> Overview &amp; Motivation</h2>
+
+<p>Modern cloud systems fail constantly: a bad deploy regresses a dependency, a connection pool wedges, a container leaks memory. The industry's default answer has been to page a human at 3&nbsp;a.m., have them read three dashboards, guess a cause, and run a runbook by hand. Mean time to recovery (MTTR) in that model is dominated by human reaction time, not by the actual fix — the fix itself is usually a restart or a rollback that takes seconds.</p>
+
+<p><strong>Triage</strong> is an event-driven control plane that watches a production-style workload and, when an incident occurs, detects it via CloudWatch alarms, diagnoses it by gathering evidence and reasoning over it with a small LLM (Amazon Bedrock), governs the proposed fix through a policy engine that lives <em>outside</em> the LLM's reasoning loop, acts by executing the approved remediation, and learns by writing an immutable audit trail and an LLM-generated postmortem for every incident.</p>
+
+<p>The system under protection, <strong>PayFlow</strong>, is a fintech-flavored transaction API. This choice is deliberate: fintech introduces a reliability constraint that a generic demo workload wouldn't have — <strong>a remediation that fires twice must never double-process a transaction.</strong> Idempotency is therefore load-bearing in the design (conditional writes keyed on transaction ID and incident ID, deduplication on alarm events), not decorative.</p>
+
+<div class="callout">
+  <strong class="label">One-sentence narrative</strong>
+  A Python control plane autonomously operates a Java workload — mirroring real enterprises, where AIOps tooling is almost never written in the same language as the systems it protects. Python's ~150&nbsp;ms Lambda cold start sits directly on the incident-response critical path; the JVM's 2–6&nbsp;s warm-up would not.
+</div>
+
+<p>Across live testing on real AWS infrastructure (not a simulation — every number in §6 and §7 comes from actual CloudWatch alarms, actual Step Functions executions, and actual Bedrock calls), the system successfully diagnosed and closed the loop on all three designed failure scenarios, including one incident resolved via a fully organic EventBridge trigger with no manual intervention at all.</p>
+</section>
+
+<section id="functional">
+<h2><span class="num">02</span> Functional Requirements</h2>
+
+<h3>What the system does</h3>
+<ul>
+  <li><strong>PayFlow (workload plane):</strong> accepts and records transactions (<code>POST /transactions</code>, <code>GET /transactions/{id}</code>) with idempotent, conditional writes; exposes a health check; exposes fault-injection endpoints (<code>/chaos/errors</code>, <code>/chaos/latency</code>, <code>/chaos/crash</code>, <code>/chaos/reset</code>) used to demonstrate self-healing on demand.</li>
+  <li><strong>Detection:</strong> three CloudWatch alarms (5xx rate, p99 latency, unhealthy host count) evaluate ALB/ECS metrics on a 1-minute period and route state changes through EventBridge.</li>
+  <li><strong>Evidence gathering:</strong> a Lambda pulls the last 15 minutes of CloudWatch Logs Insights results, target-group metrics, and live ECS service/deployment state into one evidence bundle.</li>
+  <li><strong>Diagnosis:</strong> a Bedrock (Nova Lite) call turns that evidence into a schema-constrained JSON diagnosis: probable cause, confidence, one recommended action name, and reasoning. The model can only ever <em>name</em> an action — it has no AWS credentials and cannot call any API.</li>
+  <li><strong>Policy governance:</strong> a DynamoDB-backed allowlist decides, independently of the model, whether the named action is <code>auto</code>, <code>needs_approval</code>, or <code>rejected</code>, and enforces a per-action hourly rate cap.</li>
+  <li><strong>Remediation:</strong> idempotent execution of one of three actions — force a new ECS deployment, scale out (capped at 2 tasks), or disable a feature flag (a rollback of last resort).</li>
+  <li><strong>Human-in-the-loop approval:</strong> higher-risk actions pause the workflow (<code>waitForTaskToken</code>), send a plain-English email with one-click approve/reject links, and resume on click via an API Gateway callback.</li>
+  <li><strong>Verification:</strong> a closed-loop check re-polls the triggering alarm on a bounded retry schedule before declaring the incident resolved.</li>
+  <li><strong>Learning:</strong> every incident is written to an append-only DynamoDB audit trail and closed out with a Bedrock-generated markdown postmortem in S3, including measured MTTR.</li>
+</ul>
+
+<h3>User stories, prioritized</h3>
+
+<div class="table-wrap"><table>
+<tr><th>Priority</th><th>Actor</th><th>Story</th></tr>
+<tr><td><span class="pill pill-failed">MUST</span></td><td>SRE / on-call engineer</td><td>As an SRE, I want error storms and crash-loops on PayFlow to be detected and auto-remediated within a few minutes, so I don't have to be paged and manually run the same restart I'd run anyway.</td></tr>
+<tr><td><span class="pill pill-failed">MUST</span></td><td>Platform admin</td><td>As a platform admin, I want any remediation riskier than a routine restart (e.g. disabling a feature flag) gated behind a human approval I can act on from my phone, so an autonomous system can never take an irreversible action unsupervised.</td></tr>
+<tr><td><span class="pill pill-escalated">SHOULD</span></td><td>Auditor / compliance reviewer</td><td>As an auditor, I want every incident — resolved, escalated, rejected, or failed — recorded in an immutable, queryable trail with timestamps and the diagnosis that drove each decision, so I can reconstruct exactly what an autonomous system did and why.</td></tr>
+<tr><td><span class="pill pill-escalated">SHOULD</span></td><td>SRE / on-call engineer</td><td>As an SRE, I want a written postmortem generated automatically for every incident, so I'm not the one writing up 3&nbsp;a.m. incidents by hand the next morning.</td></tr>
+<tr><td><span class="pill pill-rejected">NICE</span></td><td>Engineering manager</td><td>As an engineering manager, I want to see MTTR trends across incidents, so I can tell whether the automation is actually making the on-call rotation better over time.</td></tr>
+<tr><td><span class="pill pill-rejected">NICE</span></td><td>Developer</td><td>As a developer, I want to trigger any of the three failure scenarios on demand via a chaos endpoint, so I can rehearse the incident-response path without waiting for a real failure.</td></tr>
+</table></div>
+</section>
+
+<section id="nfr">
+<h2><span class="num">03</span> Non-Functional Requirements</h2>
+
+<p>Targets below are stated up front, then checked against what was actually measured on live infrastructure — several came back different from the original assumption, which is itself useful evidence about where the design's constraints really are.</p>
+
+<div class="table-wrap"><table>
+<tr><th>NFR</th><th>Target</th><th>Measured</th><th>Architectural consequence</th></tr>
+<tr>
+  <td>Detection latency</td>
+  <td>Alarm fires ≤60s after fault, 2 datapoints @ 1-min period</td>
+  <td class="num">Met — alarms consistently transitioned within 1–3 evaluation cycles</td>
+  <td>Standard-resolution alarms; a scheduled traffic generator (EventBridge Scheduler, 1/min) keeps metric density high enough for alarms to evaluate reliably even at low real traffic.</td>
+</tr>
+<tr>
+  <td>MTTR, Lambda-chain overhead</td>
+  <td>Detect→diagnose→act should not itself be the bottleneck</td>
+  <td class="num"><strong>~30–55s</strong> end-to-end when the underlying condition is already resolved by the time evidence is gathered</td>
+  <td>Confirms the control-plane's own latency (7 sequential Lambda calls incl. one Bedrock round-trip) is not the limiting factor — see next row.</td>
+</tr>
+<tr>
+  <td>MTTR, full remediation cycle (auto path)</td>
+  <td>≤120s (original guide assumption)</td>
+  <td class="num"><strong>327s measured</strong> (Scenario 2, scale_out, clean auto-approved run)</td>
+  <td>The 120s target undersold two real, fixed costs: (1) a fresh Fargate task on 0.25&nbsp;vCPU takes ~50s just for the JVM/Spring context to finish starting, and (2) the 5xx/latency alarms need <em>evaluation_periods=2–3 at a 60s period</em> of clean data to transition back to OK — a floor of roughly 2–3 minutes regardless of how fast the remediation itself runs. This is documented in §8 as a target that needed revising after empirical measurement, not a defect.</td>
+</tr>
+<tr>
+  <td>MTTR, human-approval path</td>
+  <td>Not fixed — bounded by a 1-hour approval window</td>
+  <td class="num">437s and 775s measured across two live approval-gated runs</td>
+  <td>Includes human reaction time by design; not a fair proxy for system latency, but bounded (auto-escalate after 1 hour of silence) so an ignored email can never leave an incident open indefinitely.</td>
+</tr>
+<tr>
+  <td>Workload availability</td>
+  <td>99.5% during the demo period (excl. injected faults)</td>
+  <td class="num">Met</td>
+  <td>Single steady-state task with ALB health checks; a 120s ECS <code>health_check_grace_period_seconds</code> was added after live testing showed the default (0s) caused ECS to kill a task before its JVM had finished starting — a real bug found only by deploying to real Fargate.</td>
+</tr>
+<tr>
+  <td>Workload latency</td>
+  <td>p95 &lt;300ms (healthy state)</td>
+  <td class="num">p50 ~10–70ms observed; well under target</td>
+  <td>Fargate right-sized at 0.25&nbsp;vCPU/0.5GB; DynamoDB on-demand single-digit-ms reads.</td>
+</tr>
+<tr>
+  <td>Scalability assumption</td>
+  <td>5 RPS steady, 50 RPS peak, 10× growth in year 1</td>
+  <td class="num">n/a (assumption)</td>
+  <td>On-demand DynamoDB (no capacity planning); ECS scale-out is itself a remediation action, capped at 2× to bound blast radius of a runaway auto-scale.</td>
+</tr>
+<tr>
+  <td>Durability / RPO</td>
+  <td>Audit trail: zero-loss; postmortems: S3 11-nines</td>
+  <td class="num">Met — S3 versioning enabled, verified via <code>get-bucket-versioning</code></td>
+  <td>Append-only DynamoDB design (conditional writes, no deletes) + S3 object versioning confirmed live.</td>
+</tr>
+<tr>
+  <td>Security</td>
+  <td>Least-privilege per Lambda; no long-lived CI keys</td>
+  <td class="num">Met — spot-checked live</td>
+  <td>Per-function IAM roles (10 distinct roles); GitHub OIDC federation confirmed working end-to-end (no static AWS keys ever stored in GitHub).</td>
+</tr>
+<tr>
+  <td>Cost</td>
+  <td>≤$30 of $100 credit over the project period</td>
+  <td class="num"><strong>$0.46 actual, $3.75 forecasted</strong> at time of writing</td>
+  <td>Serverless-first control plane, 3-day log retention, on-demand DynamoDB, no NAT gateway. Budget alarms live at $20/$50.</td>
+</tr>
+</table></div>
+</section>
+
+<section id="architecture">
+<h2><span class="num">04</span> Architecture Design &amp; Diagrams</h2>
+
+<h3>High-level architecture</h3>
+<p>Two planes, connected only through CloudWatch alarms and EventBridge — the agent plane observes and acts on the workload plane, but the workload plane has no knowledge of the agent plane at all (a real production boundary: PayFlow could be swapped for any other service without touching Triage's logic, as long as it emits the same three alarm shapes).</p>
+
+<div class="figure-wrap">
+<figure>
+<svg width="800" height="620" viewBox="0 0 800 620" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,system-ui,sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+
+  <rect x="8" y="8" width="784" height="278" rx="10" fill="var(--indigo-soft)" opacity="0.5"/>
+  <text x="24" y="32" font-size="12" font-weight="700" letter-spacing="0.06em" fill="var(--indigo)">WORKLOAD PLANE — "PAYFLOW" (JAVA / SPRING BOOT)</text>
+
+  <rect x="24" y="46" width="150" height="46" rx="7" fill="var(--paper)" stroke="var(--line-strong)"/>
+  <text x="99" y="65" font-size="12" text-anchor="middle" fill="var(--ink)">Traffic Gen</text>
+  <text x="99" y="80" font-size="10" text-anchor="middle" fill="var(--ink-soft)">Lambda · rate(1 min)</text>
+
+  <rect x="220" y="46" width="110" height="46" rx="7" fill="var(--paper)" stroke="var(--line-strong)"/>
+  <text x="275" y="70" font-size="12" text-anchor="middle" fill="var(--ink)">ALB</text>
+
+  <rect x="376" y="36" width="180" height="66" rx="7" fill="var(--paper)" stroke="var(--line-strong)"/>
+  <text x="466" y="58" font-size="12" text-anchor="middle" fill="var(--ink)">PayFlow · ECS Fargate</text>
+  <text x="466" y="73" font-size="10" text-anchor="middle" fill="var(--ink-soft)">/transactions /health</text>
+  <text x="466" y="87" font-size="10" text-anchor="middle" fill="var(--ink-soft)">/chaos (fault injection)</text>
+
+  <rect x="602" y="46" width="160" height="46" rx="7" fill="var(--paper)" stroke="var(--line-strong)"/>
+  <text x="682" y="65" font-size="12" text-anchor="middle" fill="var(--ink)">DynamoDB</text>
+  <text x="682" y="80" font-size="10" text-anchor="middle" fill="var(--ink-soft)">payflow-transactions</text>
+
+  <rect x="24" y="140" width="738" height="120" rx="7" fill="var(--paper)" stroke="var(--line-strong)"/>
+  <text x="40" y="162" font-size="12" font-weight="600" fill="var(--ink)">CloudWatch</text>
+  <text x="40" y="180" font-size="10.5" fill="var(--ink-soft)">3 alarms: HTTPCode_Target_5XX_Count ≥10/2min · TargetResponseTime p99 &gt;2s/3min · UnHealthyHostCount ≥1/2min</text>
+  <text x="40" y="198" font-size="10.5" fill="var(--ink-soft)">Logs Insights (/ecs/payflow, 3-day retention) · Dashboard (request count, p50/95/99, 5xx, healthy hosts, CPU/mem)</text>
+  <rect x="40" y="212" width="130" height="30" rx="15" fill="var(--red-soft)"/>
+  <text x="105" y="231" font-size="10.5" text-anchor="middle" fill="var(--red)" font-weight="600">alarm state change</text>
+
+  <line x1="174" y1="69" x2="218" y2="69" stroke="var(--ink-soft)" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <line x1="330" y1="69" x2="374" y2="69" stroke="var(--ink-soft)" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <line x1="556" y1="69" x2="600" y2="69" stroke="var(--ink-soft)" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <line x1="466" y1="102" x2="466" y2="138" stroke="var(--ink-soft)" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <text x="472" y="122" font-size="9.5" fill="var(--ink-soft)">metrics + logs</text>
+
+  <rect x="8" y="300" width="784" height="312" rx="10" fill="var(--green-soft)" opacity="0.55"/>
+  <text x="24" y="324" font-size="12" font-weight="700" letter-spacing="0.06em" fill="var(--green)">AGENT PLANE — "TRIAGE" (PYTHON / STEP FUNCTIONS)</text>
+
+  <line x1="105" y1="242" x2="105" y2="352" stroke="var(--ink-soft)" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <text x="112" y="300" font-size="9.5" fill="var(--ink-soft)">EventBridge rule</text>
+  <text x="112" y="312" font-size="9.5" fill="var(--ink-soft)">(ALARM state only)</text>
+
+  <rect x="24" y="352" width="740" height="56" rx="7" fill="var(--paper)" stroke="var(--line-strong)"/>
+  <text x="394" y="374" font-size="12.5" text-anchor="middle" fill="var(--ink)" font-weight="600">Step Functions — triage-incident-response</text>
+  <text x="394" y="392" font-size="10" text-anchor="middle" fill="var(--ink-soft)">Intake (dedup) → Evidence → Diagnose (Bedrock) → PolicyCheck → Remediate → Verify → Postmortem</text>
+
+  <rect x="24" y="430" width="220" height="70" rx="7" fill="var(--paper)" stroke="var(--line-strong)"/>
+  <text x="134" y="452" font-size="11.5" text-anchor="middle" fill="var(--ink)" font-weight="600">Amazon Bedrock</text>
+  <text x="134" y="468" font-size="10" text-anchor="middle" fill="var(--ink-soft)">Nova Lite · diagnosis +</text>
+  <text x="134" y="482" font-size="10" text-anchor="middle" fill="var(--ink-soft)">postmortem generation</text>
+
+  <rect x="270" y="430" width="220" height="70" rx="7" fill="var(--paper)" stroke="var(--line-strong)"/>
+  <text x="380" y="452" font-size="11.5" text-anchor="middle" fill="var(--ink)" font-weight="600">DynamoDB</text>
+  <text x="380" y="468" font-size="10" text-anchor="middle" fill="var(--ink-soft)">triage-policies (allowlist)</text>
+  <text x="380" y="482" font-size="10" text-anchor="middle" fill="var(--ink-soft)">triage-incidents (audit trail)</text>
+
+  <rect x="516" y="430" width="248" height="70" rx="7" fill="var(--paper)" stroke="var(--line-strong)"/>
+  <text x="640" y="452" font-size="11.5" text-anchor="middle" fill="var(--ink)" font-weight="600">SNS + API Gateway</text>
+  <text x="640" y="468" font-size="10" text-anchor="middle" fill="var(--ink-soft)">approval email (waitForTaskToken)</text>
+  <text x="640" y="482" font-size="10" text-anchor="middle" fill="var(--ink-soft)">approve/reject callback → SendTask*</text>
+
+  <rect x="24" y="524" width="220" height="66" rx="7" fill="var(--paper)" stroke="var(--line-strong)"/>
+  <text x="134" y="548" font-size="11.5" text-anchor="middle" fill="var(--ink)" font-weight="600">S3</text>
+  <text x="134" y="564" font-size="10" text-anchor="middle" fill="var(--ink-soft)">postmortems/ (versioned)</text>
+
+  <rect x="270" y="524" width="220" height="66" rx="7" fill="var(--paper)" stroke="var(--line-strong)"/>
+  <text x="380" y="548" font-size="11.5" text-anchor="middle" fill="var(--ink)" font-weight="600">SQS</text>
+  <text x="380" y="564" font-size="10" text-anchor="middle" fill="var(--ink-soft)">dead-letter queue (14-day retention)</text>
+
+  <rect x="516" y="524" width="248" height="66" rx="7" fill="var(--paper)" stroke="var(--line-strong)"/>
+  <text x="640" y="548" font-size="11.5" text-anchor="middle" fill="var(--ink)" font-weight="600">ECS UpdateService</text>
+  <text x="640" y="564" font-size="10" text-anchor="middle" fill="var(--ink-soft)">restart / scale_out (idempotency-gated)</text>
+
+  <line x1="394" y1="408" x2="394" y2="428" stroke="var(--ink-soft)" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <line x1="640" y1="500" x2="640" y2="522" stroke="var(--ink-soft)" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <line x1="134" y1="500" x2="134" y2="522" stroke="var(--ink-soft)" stroke-width="1.4" marker-end="url(#arrow)"/>
+  <line x1="640" y1="500" x2="466" y2="602" stroke="var(--ink-soft)" stroke-width="1.2" stroke-dasharray="3,3" marker-end="url(#arrow)"/>
+  <text x="500" y="595" font-size="9" fill="var(--ink-soft)">restart/scale acts back on PayFlow</text>
+</svg>
+<figcaption><strong>Figure 1.</strong> High-level architecture. The workload plane (top) and agent plane (bottom) are connected only through CloudWatch metrics/alarms flowing up and an EventBridge rule flowing down — Triage never talks to PayFlow directly except via the ECS control-plane API when it remediates.</figcaption>
+</figure>
+</div>
+
+<h3>Sequence diagram — Scenario 1 request-level flow (error storm → auto-restart)</h3>
+<p>This traces the exact path exercised live on July&nbsp;5, 2026: a chaos-injected error storm, auto-approved restart, and a closed-loop verification before the incident is marked resolved.</p>
+
+<div class="figure-wrap">
+<figure>
+<svg width="820" height="640" viewBox="0 0 820 640" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,system-ui,sans-serif">
+  <defs>
+    <marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="currentColor"/>
+    </marker>
+  </defs>
+  <!-- lifelines -->
+  <g font-size="11" fill="var(--ink)">
+    <text x="50" y="20" text-anchor="middle" font-weight="700">Demo /</text>
+    <text x="50" y="33" text-anchor="middle" font-weight="700">Chaos</text>
+    <text x="185" y="20" text-anchor="middle" font-weight="700">PayFlow</text>
+    <text x="185" y="33" text-anchor="middle" font-weight="700">(ECS)</text>
+    <text x="330" y="20" text-anchor="middle" font-weight="700">CloudWatch /</text>
+    <text x="330" y="33" text-anchor="middle" font-weight="700">EventBridge</text>
+    <text x="500" y="20" text-anchor="middle" font-weight="700">Step Functions</text>
+    <text x="500" y="33" text-anchor="middle" font-weight="700">(Lambdas)</text>
+    <text x="670" y="20" text-anchor="middle" font-weight="700">Bedrock</text>
+    <text x="770" y="20" text-anchor="middle" font-weight="700">S3 /</text>
+    <text x="770" y="33" text-anchor="middle" font-weight="700">DynamoDB</text>
+  </g>
+  <g stroke="var(--line-strong)" stroke-width="1">
+    <line x1="50" y1="45" x2="50" y2="615"/>
+    <line x1="185" y1="45" x2="185" y2="615"/>
+    <line x1="330" y1="45" x2="330" y2="615"/>
+    <line x1="500" y1="45" x2="500" y2="615"/>
+    <line x1="670" y1="45" x2="670" y2="615"/>
+    <line x1="770" y1="45" x2="770" y2="615"/>
+  </g>
+
+  <g font-size="10.5" fill="var(--ink)">
+    <line x1="50" y1="70" x2="181" y2="70" stroke="var(--ink)" marker-end="url(#arrow2)"/>
+    <text x="55" y="64">1. POST /chaos/errors</text>
+
+    <line x1="185" y1="100" x2="326" y2="100" stroke="var(--ink)" marker-end="url(#arrow2)"/>
+    <text x="190" y="94">2. 500s + structured error logs (per request)</text>
+
+    <line x1="330" y1="130" x2="330" y2="130" stroke="var(--ink)"/>
+    <text x="335" y="128">3. 5xx-rate alarm: OK → ALARM</text>
+    <text x="335" y="142" fill="var(--ink-soft)">   (≥10 5xx / 2×1-min datapoints)</text>
+
+    <line x1="330" y1="160" x2="496" y2="160" stroke="var(--ink)" marker-end="url(#arrow2)"/>
+    <text x="335" y="154">4. EventBridge rule → StartExecution</text>
+
+    <line x1="500" y1="185" x2="500" y2="185" stroke="var(--ink)"/>
+    <text x="505" y="183">5. Intake: dedup check (10-min window)</text>
+    <text x="505" y="197" fill="var(--ink-soft)">   → conditional PutItem, incident OPEN</text>
+
+    <line x1="500" y1="220" x2="330" y2="220" stroke="var(--ink)" marker-end="url(#arrow2)"/>
+    <line x1="330" y1="235" x2="500" y2="235" stroke="var(--ink)" marker-end="url(#arrow2)"/>
+    <text x="335" y="214">6. Evidence: Logs Insights query + GetMetricData + DescribeServices</text>
+
+    <line x1="500" y1="265" x2="666" y2="265" stroke="var(--ink)" marker-end="url(#arrow2)"/>
+    <line x1="670" y1="280" x2="504" y2="280" stroke="var(--ink)" marker-end="url(#arrow2)"/>
+    <text x="505" y="259">7. Diagnose: Converse() with evidence + schema</text>
+    <text x="505" y="293" fill="var(--ink-soft)">   ← {cause, confidence: high, action: restart_service}</text>
+
+    <line x1="500" y1="315" x2="766" y2="315" stroke="var(--ink)" marker-end="url(#arrow2)"/>
+    <line x1="770" y1="330" x2="504" y2="330" stroke="var(--ink)" marker-end="url(#arrow2)"/>
+    <text x="505" y="309">8. PolicyCheck: GetItem(action) + rate-cap scan</text>
+    <text x="505" y="343" fill="var(--ink-soft)">   ← {decision: auto} — within allowlist &amp; cap</text>
+
+    <line x1="500" y1="365" x2="181" y2="365" stroke="var(--ink)" marker-end="url(#arrow2)"/>
+    <text x="505" y="359">9. Remediate: idempotency-gated UpdateService</text>
+    <text x="190" y="378" fill="var(--ink-soft)">   (force new deployment — old task's in-memory</text>
+    <text x="190" y="391" fill="var(--ink-soft)">   chaos flags die with it)</text>
+
+    <line x1="500" y1="415" x2="500" y2="415" stroke="var(--ink)"/>
+    <text x="505" y="413">10. Wait 45s → Verify (loop, max 8×)</text>
+
+    <line x1="330" y1="440" x2="504" y2="440" stroke="var(--ink)" marker-end="url(#arrow2)"/>
+    <text x="335" y="434">11. DescribeAlarms → state == OK</text>
+
+    <line x1="500" y1="470" x2="666" y2="470" stroke="var(--ink)" marker-end="url(#arrow2)"/>
+    <line x1="670" y1="485" x2="504" y2="485" stroke="var(--ink)" marker-end="url(#arrow2)"/>
+    <text x="505" y="464">12. Postmortem: Converse() on full incident record</text>
+    <text x="505" y="498" fill="var(--ink-soft)">   ← markdown postmortem</text>
+
+    <line x1="500" y1="520" x2="766" y2="520" stroke="var(--ink)" marker-end="url(#arrow2)"/>
+    <text x="505" y="514">13. PutObject postmortems/{id}.md + UpdateItem status=RESOLVED, mttr_seconds</text>
+
+    <text x="505" y="550" font-weight="700" fill="var(--green)">Execution SUCCEEDED — incident closed, MTTR recorded</text>
+    <text x="505" y="568" fill="var(--ink-soft)">Live measurement, Scenario 2 clean run: 327s. See §3, §6.</text>
+  </g>
+</svg>
+<figcaption><strong>Figure 2.</strong> Request-level sequence for the auto-approved path. Steps 1–2 are the demo trigger; step 3 is the only thing PayFlow and Triage share (an alarm state change); steps 5–13 are entirely within the agent plane and run without further human input. The human-approval variant (Scenario 3) inserts a <code>RequestApproval</code> step between 8 and 9 that pauses on <code>waitForTaskToken</code> and resumes only when the approve/reject link is clicked.</figcaption>
+</figure>
+</div>
+
+<h3>Design decisions worth defending</h3>
+
+<div class="decision">
+  <div class="name">1. Policy enforcement outside the LLM's reasoning loop</div>
+  <dl>
+    <dt>Property</dt><dd>The blast radius of a hallucinated or manipulated diagnosis is bounded by a DynamoDB allowlist the model cannot write to.</dd>
+    <dt>Consequence</dt><dd>Automation is safe to run unattended for the two auto-approved actions; anything else is gated. Confirmed live: even when the model recommended the wrong action for the evidence (see §8), the policy engine's <code>needs_approval</code> gate meant nothing unsafe happened without a human clicking approve.</dd>
+  </dl>
+</div>
+<div class="decision">
+  <div class="name">2. Idempotent remediation keyed on incident ID</div>
+  <dl>
+    <dt>Property</dt><dd>At-least-once delivery (Step Functions retries, duplicate alarm events) demands an idempotent consumer.</dd>
+    <dt>Consequence</dt><dd>A conditional <code>UpdateItem</code> on <code>action_executed</code> (false→true) gates every remediation; a duplicate invocation becomes a verified no-op rather than a double-restart or double-scale.</dd>
+  </dl>
+</div>
+<div class="decision">
+  <div class="name">3. Dedup/cooldown at intake</div>
+  <dl>
+    <dt>Property</dt><dd>The agent itself needs a circuit breaker so a flapping alarm can't spawn parallel workflows.</dd>
+    <dt>Consequence</dt><dd>Intake queries a GSI for an OPEN incident on the same alarm within a 10-minute window before creating a new one. A real bug found in testing: the <code>NotifyRejected</code> path originally never closed the incident record out of <code>OPEN</code>, permanently blocking future alarms on that name — fixed by adding an explicit <code>MarkRejected</code> transition (see §6).</dd>
+  </dl>
+</div>
+<div class="decision">
+  <div class="name">4. Closed-loop verification, not fire-and-forget</div>
+  <dl>
+    <dt>Property</dt><dd>A remediation isn't done until the alarm confirms it.</dd>
+    <dt>Consequence</dt><dd>A bounded Wait→Verify loop (originally 4×30s, widened to 8×45s after live testing showed CloudWatch's own evaluation window plus Fargate cold-start regularly exceeded the original 120s budget) escalates to a human via SNS instead of silently declaring victory.</dd>
+  </dl>
+</div>
+</section>
+
+<section id="techstack">
+<h2><span class="num">05</span> Tech Stack Selection &amp; Justification</h2>
+
+<div class="table-wrap"><table>
+<tr><th>Component</th><th>Choice</th><th>Why (vs. alternative)</th><th>Honest risk</th></tr>
+<tr><td>Workload language</td><td>Java 17 / Spring Boot</td><td>Represents the enterprise reality that AIOps tooling almost never shares a language with the systems it protects; a long-running Fargate container makes JVM warm-up a non-issue for the workload itself.</td><td>JVM cold start (~50s on 0.25 vCPU) turned out to matter a great deal for <em>remediation</em> latency (a restart replaces the container), which is exactly the NFR surprise documented in §3.</td></tr>
+<tr><td>Agent-plane language</td><td>Python 3.12 (Lambda)</td><td>Chosen over Node.js/Go for boto3's maturity and because Lambda cold-start latency sits directly on the incident-response critical path (~150ms vs. several seconds for a JVM Lambda).</td><td>Python's dynamic typing meant one class of bug (a bad CloudWatch API parameter) only surfaced at runtime, not at a build step — mitigated by type hints and the pytest suite, not eliminated.</td></tr>
+<tr><td>Orchestration</td><td>AWS Step Functions</td><td>vs. a custom Lambda-chaining orchestrator: built-in retry/backoff, native <code>waitForTaskToken</code> for human-in-the-loop, and a visual execution graph that is itself a debugging tool (used constantly during live testing to see exactly which state failed and why).</td><td>Standard Step Functions billing is per-state-transition; a very high-incident-volume production system would need to evaluate Express workflows instead.</td></tr>
+<tr><td>Diagnosis LLM</td><td>Amazon Bedrock, <code>amazon.nova-lite-v1:0</code></td><td>vs. Claude Haiku 4.5: the newer Claude Haiku model requires a cross-region inference profile and rejected on-demand <code>Converse</code> calls in this account (found live — see §6); Nova Lite is on-demand invokable, ~1/20th the cost of a large model, and this is a classification/extraction task, not open-ended reasoning, so a small model is the architecturally correct choice, not a compromise.</td><td>A small model is more sensitive to prompt ambiguity: it twice recommended a rollback action for a plain capacity/latency symptom until the system prompt was tightened after observing the actual (wrong) output — documented honestly in §6/§8 rather than cherry-picked away.</td></tr>
+<tr><td>Data store</td><td>DynamoDB (3 tables) vs. RDS</td><td>Every access pattern here is single-item key lookups or a narrow GSI query (incident by ID, policy by action name, incidents by alarm+time) — no joins, no relational integrity needs. On-demand billing means zero idle cost for a system that is idle >99% of the time.</td><td>A relational analytics query across incidents (e.g. "average MTTR by month") would be awkward without exporting to something query-friendly; acceptable for the current scale.</td></tr>
+<tr><td>Object store</td><td>Amazon S3 (postmortems)</td><td>Versioned, cheap, durable object storage is a natural fit for markdown documents that are written once and read occasionally — no reason to put this in a database.</td><td>None material at this scale.</td></tr>
+<tr><td>IaC tool</td><td>Terraform</td><td>vs. AWS CDK/CloudFormation: a single HCL surface across every service used (ECS, Lambda, Step Functions, DynamoDB, S3, IAM, EventBridge, SNS/SQS, API Gateway, ECR) with a plan/apply workflow that gives an explicit diff before every change — used constantly during live testing to confirm <strong>zero drift</strong> after every fix.</td><td>State is local and committed to the (private) repo rather than an S3 backend with DynamoDB locking — acceptable for a single-operator class project, explicitly called out as the production gap in §8.</td></tr>
+<tr><td>CI/CD</td><td>GitHub Actions + OIDC federation</td><td>vs. long-lived IAM access keys stored as GitHub secrets: OIDC means GitHub Actions assumes a role via a signed token, so no AWS credential ever needs to exist in GitHub at rest. Verified live: both pipelines run green end-to-end with zero static keys.</td><td>The Terraform-apply job in CI operates on an ephemeral copy of local state; because state isn't in a shared backend, CI's apply doesn't persist back to the repo. Harmless today (nothing has drifted), but exactly the failure mode an S3 backend exists to prevent.</td></tr>
+</table></div>
+</section>
+
+<section id="implementation">
+<h2><span class="num">06</span> Implementation</h2>
+
+<h3>Repository &amp; IaC coverage</h3>
+<p>Source is hosted at <code>github.com/VijayPuttarevaiah/triage</code> (private). <strong>100% of AWS infrastructure is Terraform-managed</strong> — confirmed by running <code>terraform plan</code> after every live change throughout testing and getting <code>No changes. Your infrastructure matches the configuration.</code> every time. The only manual AWS action taken outside Terraform during the entire build was creating and then deleting a redundant IAM user during initial credential setup (superseded by an existing IAM Identity Center SSO profile) — it left no residual resource.</p>
+
+<h3>CI/CD — demonstrated live, not just configured</h3>
+<p>Two GitHub Actions workflows, both OIDC-authenticated:</p>
+<ul>
+  <li><code>payflow.yml</code> — on push touching <code>payflow/**</code>: Maven test → build &amp; push a <code>linux/amd64</code> image to ECR → force a new ECS deployment.</li>
+  <li><code>triage.yml</code> — on push touching <code>agent/**</code> or <code>infra/**</code>: <code>ruff</code> lint → <code>pytest</code> → <code>terraform plan</code> → <code>terraform apply</code>.</li>
+</ul>
+<p>Both were run to completion multiple times against the real AWS account and returned green on every job (<code>Set up job</code> through <code>Complete job</code>), including a full Terraform apply cycle and a full Docker build/push/deploy cycle triggered purely by a <code>git push</code>.</p>
+
+<h3>End-to-end scenario testing — real incidents, real bugs</h3>
+<p>All three chaos scenarios were exercised against the live, deployed system — not mocked. The table below is drawn directly from the <code>triage-incidents</code> DynamoDB table.</p>
+
+<div class="table-wrap"><table>
+<tr><th>Alarm</th><th>Diagnosis</th><th>Policy path</th><th>Outcome</th><th class="num">MTTR (s)</th></tr>
+<tr><td>5xx rate</td><td>restart_service (high conf.)</td><td><span class="pill pill-auto">auto</span></td><td><span class="pill pill-failed">FAILED</span> *</td><td class="num">—</td></tr>
+<tr><td>5xx rate</td><td>none — diagnose call errored</td><td><span class="pill pill-rejected">rejected</span></td><td><span class="pill pill-rejected">REJECTED</span></td><td class="num">—</td></tr>
+<tr><td>5xx rate</td><td>disable_feature_flag</td><td><span class="pill pill-approval">needs_approval</span> → approved</td><td><span class="pill pill-resolved">RESOLVED</span></td><td class="num">775</td></tr>
+<tr><td>p99 latency</td><td>disable_feature_flag</td><td><span class="pill pill-approval">needs_approval</span> → approved</td><td><span class="pill pill-resolved">RESOLVED</span></td><td class="num">437</td></tr>
+<tr><td>p99 latency</td><td>scale_out (high conf., after prompt fix)</td><td><span class="pill pill-auto">auto</span></td><td><span class="pill pill-resolved">RESOLVED</span></td><td class="num">327</td></tr>
+<tr><td>unhealthy hosts</td><td>restart_service (high conf.)</td><td><span class="pill pill-auto">auto</span></td><td><span class="pill pill-resolved">RESOLVED</span></td><td class="num">54</td></tr>
+<tr><td>unhealthy hosts</td><td>none — already self-healed</td><td><span class="pill pill-rejected">rejected</span></td><td><span class="pill pill-rejected">REJECTED</span></td><td class="num">—</td></tr>
+</table></div>
+<p style="font-size:0.85rem;color:var(--ink-soft)">* the one FAILED row is a real early-testing failure (a CloudWatch API parameter bug, below), correctly routed to the SQS dead-letter queue and marked FAILED by the <code>HandleFailure</code>/<code>MarkFailed</code> states — evidence the failure path itself works, not evidence of a currently-broken system.</p>
+
+<p>Every terminal state the design allows for — <span class="pill pill-resolved">RESOLVED</span>, <span class="pill pill-escalated">ESCALATED</span>, <span class="pill pill-rejected">REJECTED</span>, <span class="pill pill-failed">FAILED</span> — was actually observed, not just designed for. One of the RESOLVED incidents (unhealthy-hosts, MTTR 54s) was triggered by a genuinely organic EventBridge alarm transition with no manual <code>start-execution</code> call at all.</p>
+
+<h4>Five real bugs found by live testing (and fixed)</h4>
+<ol>
+  <li><strong>CloudWatch metric parameter bug:</strong> <code>get_metric_statistics</code> was always passed an <code>ExtendedStatistics</code> argument, even for non-percentile stats, where an empty list fails botocore's parameter validation.</li>
+  <li><strong>Wrong Bedrock model ID:</strong> <code>anthropic.claude-haiku-4-5</code> requires an inference profile and rejected direct on-demand invocation; switched to <code>amazon.nova-lite-v1:0</code>, verified working via a direct <code>Converse</code> call before wiring it back in.</li>
+  <li><strong>Task-token URL encoding:</strong> Step Functions task tokens routinely contain <code>+</code>, which both API Gateway's parsed query params and Python's <code>parse_qs</code> silently decode as a space — corrupting the token and breaking every approval click. Fixed by parsing <code>rawQueryString</code> manually with <code>unquote()</code> (not <code>unquote_plus()</code>).</li>
+  <li><strong>Diagnosis prompt bias:</strong> the model twice recommended the high-risk rollback action (<code>disable_feature_flag</code>) for a plain latency symptom, apparently pattern-matching on the word "flag" in a log line. Fixed by tightening the system prompt's action-selection guidance and re-verified with a clean live run that then correctly chose <code>scale_out</code>.</li>
+  <li><strong>Rejected-path dedup bug:</strong> the <code>NotifyRejected</code> branch never updated incident status, permanently blocking dedup for that alarm. Fixed with an explicit <code>MarkRejected</code> state.</li>
+</ol>
+<p>All five were found only because the system was deployed and exercised against real AWS — none would have surfaced from a code review alone. This is also why the approval-email UX issue reported after initial deployment (a single unreadable paragraph with a raw task token inline) was caught and fixed the same way: by looking at the actual email that arrived, not just the code that generated it.</p>
+
+<h3>AI-assisted development disclosure</h3>
+<p>The large majority of this project's code — all Terraform (network, compute, data, IAM, observability, agent plane, CI/CD OIDC), all 10 Python Lambda handlers, the Step Functions ASL definition, both GitHub Actions workflows, and the pytest suite — was generated with Claude Code (Anthropic), under direct human direction and with every claim in this report backed by live verification the author reviewed in real time (execution histories, CloudWatch metrics, actual emails received, actual CI run logs). The initial PayFlow Java/Spring Boot scaffold was also AI-assisted, in an earlier working session. Design decisions, scope prioritization under the report deadline, all AWS console/CLI authentication steps, and the SNS email confirmation were the author's own actions throughout.</p>
+</section>
+
+<section id="wa">
+<h2><span class="num">07</span> AWS Well-Architected Framework</h2>
+
+<div class="pillar">
+<h3>Operational Excellence</h3>
+<p><strong>Decisions:</strong> Infrastructure-as-code with a mandatory <code>terraform plan</code> before every apply (used throughout live testing to confirm zero drift); an immutable, queryable incident audit trail in DynamoDB; an auto-generated postmortem per incident so operational learning doesn't depend on someone remembering to write one up.</p>
+<p><strong>Trade-off:</strong> Local Terraform state committed to the repo is operationally simpler for a single operator but doesn't support concurrent applies safely — the documented production fix is an S3 backend with DynamoDB locking (§8).</p>
+</div>
+
+<div class="pillar">
+<h3>Security</h3>
+<p><strong>Decisions:</strong> Ten distinct per-Lambda IAM roles, each scoped to exactly the actions and resources that function needs (spot-checked live: <code>remediate</code>'s role can touch only the <code>triage-incidents</code> table and the <code>payflow</code> ECS service, nothing else); GitHub OIDC federation so CI/CD never holds a static AWS key; S3 bucket versioning plus a full public-access block (all four flags) confirmed via <code>get-public-access-block</code>; the deploy operator authenticates via IAM Identity Center SSO, not a root or static-key IAM user — the account's default root credential was identified and deliberately avoided for every infrastructure action after discovery.</p>
+<p><strong>Trade-off:</strong> Chaos-injection endpoints on PayFlow (<code>/chaos/*</code>) are intentionally unauthenticated for demo convenience — acceptable because the ALB is the only ingress and the project is short-lived, but explicitly not a production pattern; a real deployment would gate these behind auth or remove them entirely in favor of AWS Fault Injection Simulator.</p>
+</div>
+
+<div class="pillar">
+<h3>Reliability</h3>
+<p><strong>Decisions:</strong> idempotent remediation via conditional DynamoDB writes; a closed-loop verify step so "resolved" is confirmed, not assumed; a dead-letter queue for any state-machine failure, with a real FAILED incident in the audit trail proving that path was actually exercised, not just designed.</p>
+<p><strong>Trade-off:</strong> the current design runs PayFlow at a single steady-state task by default; a production system would run ≥2 tasks across AZs at all times rather than relying on <code>scale_out</code> as a remediation action to reach that state reactively.</p>
+</div>
+
+<div class="pillar">
+<h3>Performance Efficiency</h3>
+<p><strong>Decisions:</strong> Python for the whole agent plane specifically because Lambda cold-start latency sits on the critical path; a small, on-demand Bedrock model chosen because the diagnosis task is classification-shaped, not open-ended — deliberately not reaching for a larger, slower, more expensive model that would add latency without adding correctness for this task shape.</p>
+<p><strong>Trade-off:</strong> Fargate sized at 0.25 vCPU/0.5GB keeps cost low but was directly responsible for the ~50s JVM cold-start that drove the MTTR NFR revision in §3 — a concrete, measured performance/cost trade-off, not a hypothetical one.</p>
+</div>
+
+<div class="pillar">
+<h3>Cost Optimization</h3>
+<p><strong>Decisions:</strong> on-demand DynamoDB billing, 3-day CloudWatch log retention, no NAT gateway (public-subnet Fargate tasks with security-group-scoped ingress instead), serverless agent plane with zero idle compute cost. Measured actual spend: <strong>$0.46 of a $100 credit</strong> after a full day of live infrastructure testing, with two budget alarms ($20/$50) as a backstop.</p>
+<p><strong>Trade-off:</strong> no NAT gateway means Fargate tasks get public IPs directly rather than routing through a NAT in a private subnet — cheaper and simpler for this project, but not the production-grade network isolation discussed in §8.</p>
+</div>
+
+<div class="pillar">
+<h3>Sustainability</h3>
+<p><strong>Decisions:</strong> a serverless-first control plane means zero compute runs when there is no incident to process — the agent plane's carbon and cost footprint scale with actual incidents, not with provisioned capacity. On-demand DynamoDB and 3-day log retention similarly avoid holding idle storage/capacity that would otherwise sit provisioned and unused.</p>
+<p><strong>Trade-off:</strong> PayFlow's ECS tasks run on x86_64 (linux/amd64), not Graviton/ARM64 — chosen because the fastest path from a local Apple Silicon dev machine to a working Fargate deployment was <code>docker buildx build --platform linux/amd64</code> (in fact, the very first deployment attempt failed with a platform-mismatch error before this was made explicit — see §6). A production migration to Graviton-based Fargate would very likely reduce both cost and energy per request for the same workload; it was not pursued here given the report deadline.</p>
+</div>
+</section>
+
+<section id="limitations">
+<h2><span class="num">08</span> Limitations &amp; Production Roadmap</h2>
+
+<h3>What's real IAM (already implemented)</h3>
+<p>Unlike a typical AWS Academy Learner Lab constraint, this project ran in a personal AWS account with full IAM control — so the least-privilege per-function roles, the GitHub OIDC provider, and the IAM Identity Center SSO setup described in §6/§7 are genuinely implemented, not merely discussed as a future intention.</p>
+
+<h3>What's still gapped for production</h3>
+<ul>
+  <li><strong>Terraform state:</strong> local state committed to a private repo. Fix: S3 backend + DynamoDB lock table, so CI and a human operator can never race each other.</li>
+  <li><strong>Networking:</strong> default VPC, public subnets, no NAT gateway. Fix: private subnets for ECS tasks with VPC endpoints for DynamoDB/S3/ECR, behind a NAT gateway or (cheaper) gateway endpoints where available.</li>
+  <li><strong>Bedrock guardrails:</strong> the diagnosis prompt is the only thing constraining model output today (enforced by strict JSON parsing + a hard fallback to <code>none/escalate</code> on any parse failure). Fix: Bedrock Guardrails as a second, independent layer.</li>
+  <li><strong>Single region:</strong> no cross-region failover for either plane. Acceptable for a class project; a real fintech workload would need at least an active-passive secondary region.</li>
+  <li><strong>Chaos realism:</strong> in-memory chaos flags mean a restart always genuinely cures the injected error storm — an elegant accident that keeps the demo honest, but real production failure modes (data corruption, downstream dependency outages, resource exhaustion) are not always restart-curable the way this simulation is. This is the single biggest gap between what was demonstrated and a real production incident.</li>
+  <li><strong>Approval UX:</strong> now a readable plain-text email (fixed after direct user feedback on the raw version); a production system would likely use a Slack app or PagerDuty integration instead of email links for faster human response.</li>
+  <li><strong>Diagnosis prompt robustness:</strong> the model's sensitivity to incidental wording (documented in §6) suggests a production system would want either a larger evaluation set of held-out incident transcripts to regression-test prompt changes against, or a hybrid rules-first/LLM-fallback diagnosis approach for the highest-confidence, most common failure shapes.</li>
+</ul>
+
+<h3>Priority order if continuing past this submission</h3>
+<ol>
+  <li>S3 Terraform backend + DynamoDB locking (closes the CI/local-state race gap identified in §5/§6).</li>
+  <li>Bedrock Guardrails on the diagnosis call.</li>
+  <li>Private subnets + VPC endpoints.</li>
+  <li>Graviton/ARM64 migration for the sustainability trade-off noted in §7.</li>
+  <li>A held-out test set of incident transcripts to regression-test diagnosis-prompt changes before they reach production.</li>
+</ol>
+</section>
+
+</div>
