@@ -1,6 +1,6 @@
 # Triage — Autonomous Incident Response & Self-Healing Infrastructure
 
-**CSCI 5411 Term Project.** A Python control plane (Triage) that detects, diagnoses (via Amazon Bedrock), governs, and remediates incidents on a Java/Spring Boot fintech workload (PayFlow) — with a deterministic policy engine outside the LLM's reasoning loop and a human-approval path for high-risk actions.
+A Python control plane (Triage) that detects, diagnoses (via Amazon Bedrock), governs, and remediates incidents on a Java/Spring Boot fintech workload (PayFlow) — with a deterministic policy engine outside the LLM's reasoning loop and a human-approval path for high-risk actions.
 
 ## Architecture summary
 
